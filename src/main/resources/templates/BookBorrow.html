@@ -1,0 +1,550 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>借阅管理系统</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            min-height: 100vh;
+            overflow-x: hidden;
+            background: linear-gradient(to bottom, #f1f4f9, #dff1ff);
+        }
+
+        .color {
+            position: absolute;
+            filter: blur(200px);
+            animation: colorMove 20s linear infinite;
+        }
+
+        .color:nth-child(1) {
+            top: -350px;
+            width: 600px;
+            height: 600px;
+            background: #ff359b;
+            animation-delay: 0s;
+        }
+
+        .color:nth-child(2) {
+            bottom: -150px;
+            left: 100px;
+            width: 500px;
+            height: 500px;
+            background: #fffd87;
+            animation-delay: -5s;
+        }
+
+        .color:nth-child(3) {
+            bottom: 50px;
+            right: 100px;
+            width: 500px;
+            height: 500px;
+            background: #00d2ff;
+            animation-delay: -10s;
+        }
+
+        .circle {
+            position: absolute;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(5px);
+            border-radius: 50%;
+            box-shadow: 0 25px 45px rgba(0, 0, 0, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.5);
+            animation: bubbleMove 10s linear infinite;
+            filter: hue-rotate(calc(var(--x) * 70deg));
+        }
+
+        @keyframes colorMove {
+            0%, 100% { transform: translate(0, 0) rotate(0deg); }
+            25% { transform: translate(100px, 150px) rotate(90deg); }
+            50% { transform: translate(-50px, 300px) rotate(180deg); }
+            75% { transform: translate(-100px, -150px) rotate(270deg); }
+        }
+
+        @keyframes bubbleMove {
+            0%, 100% { transform: translateY(-50px) scale(0.95); }
+            50% { transform: translateY(50px) scale(1.05); }
+        }
+
+        /* 新增优化样式 */
+        .container {
+            position: relative;
+            z-index: 2;
+            width: 90%;
+            max-width: 1200px;
+            margin: 3rem auto;
+            padding: 3rem 2rem;
+            background: rgba(255, 255, 255, 0.92);
+            backdrop-filter: blur(12px);
+            border-radius: 18px;
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.08);
+        }
+
+        h1 {
+            text-align: center;
+            margin: 0 0 2.5rem;
+            padding-left: 80px;
+            color: #2c3e50;
+            font-size: 2.6rem;
+            position: relative;
+        }
+
+        h1::after {
+            content: "📆";
+            position: absolute;
+            left: 0;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 3.2rem;
+            background: rgba(255, 255, 255, 0.9);
+            padding: 1rem;
+            border-radius: 50%;
+            box-shadow: 0 6px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        #bookForm {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+            padding: 2.5rem;
+            background: rgba(255, 255, 255, 0.96);
+            border-radius: 14px;
+            margin-bottom: 3rem;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        label {
+            font-weight: 500;
+            color: #4a5568;
+            font-size: 1.05rem;
+        }
+
+        select {
+            width: 100%;
+            padding: 1rem;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            background: white;
+            font-size: 1rem;
+            transition: border-color 0.3s ease;
+            color: #4a5568;
+            background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%234a5568' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+            background-repeat: no-repeat;
+            background-position: right 1rem center;
+            background-size: 1.2rem;
+        }
+
+        select:focus {
+            border-color: #2196F3;
+            outline: none;
+            box-shadow: 0 0 0 2px rgba(33, 150, 243, 0.2);
+        }
+
+        button[type="submit"] {
+            grid-column: 1 / -1;
+            background: #2196F3;
+            color: white;
+            padding: 1.2rem 0;
+            border: none;
+            border-radius: 10px;
+            font-size: 1.1rem;
+            font-weight: 500;
+            transition: all 0.2s ease;
+        }
+
+        button[type="submit"]:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(33, 150, 243, 0.3);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background: rgba(255, 255, 255, 0.98);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03);
+        }
+
+        th, td {
+            padding: 1.2rem 1.5rem;
+            border-bottom: 1px solid #f0f4f8;
+            text-align: left;
+        }
+
+        th {
+            background: #f8f9fa;
+            font-weight: 600;
+            color: #2c3e50;
+            white-space: nowrap;
+        }
+
+        tr:hover td {
+            background: #f8fafc;
+        }
+
+        .action-btn {
+            padding: 0.6rem 1.2rem;
+            border-radius: 6px;
+            font-size: 0.95rem;
+            background: #f44336;
+            color: white;
+            border: none;
+            transition: all 0.2s ease;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 2rem 1.5rem;
+                margin: 2rem auto;
+            }
+
+            h1 {
+                font-size: 2rem;
+                padding-left: 70px;
+            }
+
+            h1::after {
+                font-size: 2.2rem;
+                padding: 0.8rem;
+            }
+
+            #bookForm {
+                grid-template-columns: 1fr;
+                padding: 1.5rem;
+                gap: 1.5rem;
+            }
+
+            td, th {
+                padding: 1rem;
+            }
+        }
+
+        /* 气泡定位不变 */
+        .circle:nth-child(1) { top: 20%; left: 10%; width: 100px; height: 100px; }
+        .circle:nth-child(2) { top: 60%; right: 15%; width: 120px; height: 120px; }
+        .circle:nth-child(3) { bottom: 30%; left: 25%; width: 80px; height: 80px; }
+        .circle:nth-child(4) { top: 40%; right: 5%; width: 60px; height: 60px; }
+        .circle:nth-child(5) { bottom: 10%; left: 15%; width: 90px; height: 90px; }
+        /* 删除确认弹窗样式 */
+        .confirm-dialog {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: white;
+            padding: 2rem;
+            border-radius: 8px;
+            box-shadow: 0 0 20px rgba(0,0,0,0.2);
+            z-index: 1000;
+            width: 400px;
+            text-align: center;
+        }
+
+        .confirm-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 999;
+        }
+
+        .dialog-buttons {
+            margin-top: 1.5rem;
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+        }
+
+        .confirm-btn {
+            background: #f44336;
+            color: white;
+            padding: 0.8rem 1.5rem;
+            border-radius: 4px;
+            border: none;
+            cursor: pointer;
+            transition: opacity 0.2s;
+        }
+
+        .cancel-btn {
+            background: #607d8b;
+            color: white;
+            padding: 0.8rem 1.5rem;
+            border-radius: 4px;
+            border: none;
+            cursor: pointer;
+        }
+        /* 消息提示样式 */
+        .message-container {
+            grid-column: 1 / -1;
+            margin-bottom: 1.5rem;
+        }
+
+        .alert {
+            position: relative;
+            padding: 1rem 2.5rem 1rem 1.25rem;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            animation: slideIn 0.3s ease-out;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .alert.error {
+            background: #fff5f5;
+            border: 1px solid #fed7d7;
+            color: #c53030;
+        }
+
+        .alert.success {
+            background: #f0fff4;
+            border: 1px solid #c6f6d5;
+            color: #2f855a;
+        }
+
+        .close-btn {
+            position: absolute;
+            right: 1rem;
+            top: 50%;
+            transform: translateY(-50%);
+            cursor: pointer;
+            font-size: 1.5rem;
+            line-height: 1;
+            opacity: 0.7;
+            transition: opacity 0.2s;
+        }
+
+        .close-btn:hover {
+            opacity: 1;
+        }
+
+        @keyframes slideIn {
+            from { transform: translateY(-20px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+    </style>
+</head>
+<body>
+<!-- 保留所有背景元素 -->
+<div class="color"></div>
+<div class="color"></div>
+<div class="color"></div>
+
+<div class="circle" style="--x:0"></div>
+<div class="circle" style="--x:1"></div>
+<div class="circle" style="--x:2"></div>
+<div class="circle" style="--x:3"></div>
+<div class="circle" style="--x:4"></div>
+
+<div class="container">
+    <h1>借阅管理系统</h1>
+    <div class="message-container">
+        <div th:if="${errorMessage}" class="alert error">
+            <span th:text="${errorMessage}"></span>
+            <div class="close-btn" onclick="this.parentElement.remove()">×</div>
+        </div>
+        <div th:if="${successMessage}" class="alert success">
+            <span th:text="${successMessage}"></span>
+            <div class="close-btn" onclick="this.parentElement.remove()">×</div>
+        </div>
+    </div>
+    <!-- 优化后的表单 -->
+    <form id="bookForm" action="/addBorrow" method="post">
+        <div class="form-group">
+            <label for="bid">选择书籍</label>
+            <select id="bid" name="bid" required>
+                <option value="" disabled selected>请选择书籍</option>
+                <option th:each="book : ${books}"
+                        th:value="${book.bid}"
+                        th:text="${book.name}"></option>
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label for="sid">选择借阅人</label>
+            <select id="sid" name="sid" required>
+                <option value="" disabled selected>请选择学生</option>
+                <option th:each="student : ${students}"
+                        th:value="${student.sid}"
+                        th:text="${student.name}"></option>
+            </select>
+        </div>
+
+        <button type="submit">📚 添加借阅记录</button>
+    </form>
+
+    <!-- 优化后的表格 -->
+    <div style="overflow-x: auto; border-radius: 10px; margin-top: 1rem;">
+        <table>
+            <thead>
+            <tr>
+                <th>书名</th>
+                <th>借阅人</th>
+                <th>借阅时间</th>
+                <th>操作</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr th:each="i : ${list}">
+                <td th:text="${i.title}"></td>
+                <td th:text="${i.name}"></td>
+                <td th:text="${#dates.format(i.date, 'yyyy-MM-dd HH:mm')}"></td>
+                <td>
+                    <form class="delete-form" action="/deleteBorrow" method="post">
+                        <input type="hidden" name="bid" th:value="${i.bid}">
+                        <input type="hidden" name="id" th:value="${i.id}"/>
+                        <button type="button" class="action-btn delete-btn">
+                            🗑️ 删除记录
+                        </button>
+                    </form>
+                </td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+</body>
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        // 事件委托处理删除按钮
+        document.querySelector('.container').addEventListener('click', async (e) => {
+            if (e.target.closest('.delete-btn')) {
+                const form = e.target.closest('.delete-form');
+                showConfirmDialog(form);
+            }
+        });
+    });
+
+    function showConfirmDialog(form) {
+        // 获取借阅信息
+        const row = form.closest('tr');
+        const bookName = row.children[0].textContent;
+        const borrower = row.children[1].textContent;
+
+        // 创建弹窗元素
+        const dialog = document.createElement('div');
+        dialog.className = 'confirm-dialog';
+        dialog.innerHTML = `
+        <h3 style="margin-bottom: 1rem; color: #333">确认删除借阅记录？</h3>
+        <p style="margin-bottom: 0.5rem">📖 书名：<strong>${bookName}</strong></p>
+        <p>👤 借阅人：<strong>${borrower}</strong></p>
+        <div class="dialog-buttons">
+            <button class="confirm-btn">确认删除</button>
+            <button class="cancel-btn">取消操作</button>
+        </div>
+    `;
+
+        // 创建遮罩层
+        const overlay = document.createElement('div');
+        overlay.className = 'confirm-overlay';
+
+        document.body.append(overlay, dialog);
+
+        // 处理确认操作
+        dialog.querySelector('.confirm-btn').addEventListener('click', async () => {
+            try {
+                const btn = dialog.querySelector('.confirm-btn');
+                btn.disabled = true;
+                btn.innerHTML = '⏳ 删除中...';
+
+                // 执行删除
+                await performDelete(form, row);
+            } finally {
+                cleanupElements();
+            }
+        });
+
+        // 处理取消操作
+        const cleanupElements = () => {
+            dialog.remove();
+            overlay.remove();
+        };
+
+        dialog.querySelector('.cancel-btn').addEventListener('click', cleanupElements);
+        overlay.addEventListener('click', cleanupElements);
+    }
+
+    async function performDelete(form, row) {
+        try {
+            // 添加删除动画
+            row.style.transition = 'all 0.4s ease';
+            row.style.opacity = '0.5';
+            row.style.transform = 'translateX(30px)';
+
+            // 发送删除请求
+            const response = await fetch(form.action, {
+                method: 'POST',
+                body: new URLSearchParams(new FormData(form)),
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded'
+                }
+            });
+
+            if (response.ok) {
+                // 成功动画
+                row.style.transform = 'translateX(100%)';
+                setTimeout(() => row.remove(), 400);
+
+                // 添加删除成功提示
+                showToast('✅ 记录已成功删除', 2000);
+            } else {
+                throw new Error('删除失败');
+            }
+        } catch (error) {
+            console.error('删除错误:', error);
+            showToast('❌ 删除失败，请重试', 2000);
+            row.style.opacity = '1';
+            row.style.transform = 'none';
+        }
+    }
+
+    // 提示信息组件
+    function showToast(message, duration) {
+        const toast = document.createElement('div');
+        toast.style.cssText = `
+        position: fixed;
+        bottom: 30px;
+        left: 50%;
+        transform: translateX(-50%);
+        background: rgba(0,0,0,0.8);
+        color: white;
+        padding: 12px 24px;
+        border-radius: 8px;
+        font-size: 14px;
+        animation: fadeIn 0.3s;
+    `;
+        toast.textContent = message;
+        document.body.appendChild(toast);
+
+        setTimeout(() => {
+            toast.style.animation = 'fadeOut 0.3s';
+            setTimeout(() => toast.remove(), 300);
+        }, duration - 300);
+    }
+
+    // 添加动画关键帧
+    const style = document.createElement('style');
+    style.textContent = `
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translate(-50%, 20px); }
+        to { opacity: 1; transform: translate(-50%, 0); }
+    }
+    @keyframes fadeOut {
+        from { opacity: 1; transform: translate(-50%, 0); }
+        to { opacity: 0; transform: translate(-50%, 20px); }
+    }
+`;
+    document.head.appendChild(style);
+</script>
+</html>

@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>游戏大厅</title>
+    <style>
+        /* 保留原有基础样式 */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        section {
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background: linear-gradient(to bottom, #f1f4f9, #dff1ff);
+        }
+
+        .color {
+            position: absolute;
+            filter: blur(200px);
+            animation: colorMove 20s linear infinite;
+        }
+
+        .color:nth-child(1) { background: #ff359b; }
+        .color:nth-child(2) { background: #fffd87; }
+        .color:nth-child(3) { background: #00d2ff; }
+
+        /* 新增游戏卡片容器 */
+        .game-container {
+            position: relative;
+            width: 90%;
+            max-width: 1200px;
+            padding: 40px;
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            box-shadow: 0 25px 45px rgba(0, 0, 0, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.5);
+        }
+
+        /* 游戏标题样式 */
+        .game-header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .game-header h1 {
+            color: #2c3e50;
+            font-size: 2.5em;
+            letter-spacing: 3px;
+            position: relative;
+            display: inline-block;
+        }
+
+        .game-header h1::after {
+            content: '';
+            position: absolute;
+            bottom: -10px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 60px;
+            height: 3px;
+            background: #00d2ff;
+        }
+
+        /* 游戏卡片布局 */
+        .game-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 30px;
+            padding: 20px;
+        }
+
+        .game-card {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 15px;
+            padding: 25px;
+            transition: transform 0.3s ease;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+            border: 1px solid rgba(255,255,255,0.3);
+        }
+
+        .game-card:hover {
+            transform: translateY(-10px);
+        }
+
+        .game-icon {
+            width: 80px;
+            height: 80px;
+            margin: 0 auto 20px;
+            background: linear-gradient(135deg, #00d2ff, #ff7eb3);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 32px;
+            color: white;
+        }
+
+        .game-content {
+            text-align: center;
+        }
+
+        .game-title {
+            color: #2c3e50;
+            font-size: 1.4em;
+            margin-bottom: 12px;
+        }
+
+        .game-desc {
+            color: #7f8c8d;
+            font-size: 0.95em;
+            line-height: 1.6;
+            margin-bottom: 20px;
+        }
+
+        .play-btn {
+            display: inline-flex;
+            align-items: center;
+            padding: 12px 28px;
+            background: linear-gradient(135deg, #00d2ff, #ff7eb3);
+            color: white;
+            border-radius: 30px;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            font-weight: 500;
+        }
+
+        .play-btn:hover {
+            box-shadow: 0 5px 15px rgba(0,210,255,0.3);
+            transform: scale(1.05);
+        }
+
+        /* 响应式调整 */
+        @media (max-width: 768px) {
+            .game-container {
+                padding: 25px;
+            }
+
+            .game-header h1 {
+                font-size: 2em;
+            }
+
+            .game-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+<section>
+    <div class="color"></div>
+    <div class="color"></div>
+    <div class="color"></div>
+
+    <div class="game-container">
+        <div class="game-header">
+            <h1>游戏大厅</h1>
+        </div>
+
+        <div class="game-grid">
+            <!-- 游戏卡片1 -->
+            <div class="game-card">
+                <div class="game-icon">🎮</div>
+                <div class="game-content">
+                    <h3 class="game-title">坦克大战</h3>
+                    <p class="game-desc">在奇幻世界中通过解决坦克生存难题闯关，适合1-6年级学生</p>
+                    <a href="/Tank.html" class="play-btn">开始游戏</a>
+                </div>
+            </div>
+
+            <!-- 游戏卡片2 -->
+            <div class="game-card">
+                <div class="game-icon">🎮</div>
+                <div class="game-content">
+                    <h3 class="game-title">贪吃蛇</h3>
+                    <p class="game-desc">锻炼你高超的走位</p>
+                    <a href="/snake.html" class="play-btn">开始游戏</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+</body>
+</html>

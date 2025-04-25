@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>忘记密码 - 图书管理系统</title>
+    <style>
+        /* 继承主系统的动态背景样式 */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            min-height: 100vh;
+            overflow-x: hidden;
+            background: linear-gradient(to bottom, #f1f4f9, #dff1ff);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        /* 动态背景颜色块 */
+        .color {
+            position: absolute;
+            filter: blur(200px);
+            animation: colorMove 20s linear infinite;
+        }
+
+        .color:nth-child(1) {
+            top: -350px;
+            width: 600px;
+            height: 600px;
+            background: #ff359b;
+            animation-delay: 0s;
+        }
+
+        .color:nth-child(2) {
+            bottom: -150px;
+            left: 100px;
+            width: 500px;
+            height: 500px;
+            background: #fffd87;
+            animation-delay: -5s;
+        }
+
+        .color:nth-child(3) {
+            bottom: 50px;
+            right: 100px;
+            width: 500px;
+            height: 500px;
+            background: #00d2ff;
+            animation-delay: -10s;
+        }
+
+        /* 动态气泡 */
+        .circle {
+            position: absolute;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(5px);
+            border-radius: 50%;
+            box-shadow: 0 25px 45px rgba(0, 0, 0, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.5);
+            animation: bubbleMove 10s linear infinite;
+            filter: hue-rotate(calc(var(--x) * 70deg));
+        }
+
+        /* 动画定义 */
+        @keyframes colorMove {
+            0%, 100% { transform: translate(0, 0) rotate(0deg); }
+            25% { transform: translate(100px, 150px) rotate(90deg); }
+            50% { transform: translate(-50px, 300px) rotate(180deg); }
+            75% { transform: translate(-100px, -150px) rotate(270deg); }
+        }
+
+        @keyframes bubbleMove {
+            0%, 100% { transform: translateY(-50px) scale(0.95); }
+            50% { transform: translateY(50px) scale(1.05); }
+        }
+
+        /* 登录容器样式 */
+        .auth-container {
+            position: relative;
+            z-index: 2;
+            width: 400px;
+            padding: 40px;
+            background: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
+        }
+
+        .auth-title {
+            text-align: center;
+            margin-bottom: 30px;
+            color: #2c3e50;
+            font-size: 24px;
+        }
+
+        .auth-form .form-group {
+            margin-bottom: 20px;
+        }
+
+        .auth-form label {
+            display: block;
+            margin-bottom: 8px;
+            color: #34495e;
+            font-weight: 500;
+        }
+
+        .auth-form input {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 14px;
+            transition: all 0.3s ease;
+        }
+
+        .auth-form input:focus {
+            border-color: #3498db;
+            box-shadow: 0 0 8px rgba(52, 152, 219, 0.3);
+        }
+
+        .auth-form button {
+            width: 100%;
+            padding: 12px;
+            background: #3498db;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: all 0.3s ease;
+        }
+
+        .auth-form button:hover {
+            background: #2980b9;
+            transform: translateY(-2px);
+        }
+
+        .auth-links {
+            text-align: center;
+            margin-top: 20px;
+        }
+
+        .auth-links a {
+            color: #3498db;
+            text-decoration: none;
+            transition: color 0.3s ease;
+        }
+
+        .auth-links a:hover {
+            color: #2980b9;
+        }
+    </style>
+</head>
+<body>
+<!-- 动态背景元素 -->
+<div class="color"></div>
+<div class="color"></div>
+<div class="color"></div>
+
+<!-- 动态气泡 -->
+<div class="circle" style="--x:0"></div>
+<div class="circle" style="--x:1"></div>
+<div class="circle" style="--x:2"></div>
+<div class="circle" style="--x:3"></div>
+<div class="circle" style="--x:4"></div>
+
+<div class="auth-container">
+    <h2 class="auth-title">重置密码</h2>
+
+    <!-- 错误信息 -->
+    <div class="alert alert-danger" th:if="${session.error != null}">
+        <span th:text="${session.error}" style="color: red"></span>
+    </div>
+
+    <!-- 成功信息 -->
+    <div class="alert alert-success" th:if="${session.success != null}">
+        <span th:text="${session.success}" style="color: green"></span>
+    </div>
+
+    <form class="auth-form" action="/forget" method="post">
+        <div class="form-group">
+            <label for="username">用户名</label>
+            <input type="text" id="username" name="username" required>
+        </div>
+
+        <div class="form-group">
+            <label for="password">新密码</label>
+            <input type="password" id="password" name="password" required>
+        </div>
+
+        <div class="form-group">
+            <label for="newpassword">确认密码</label>
+            <input type="password" id="newpassword" name="newpassword" required>
+        </div>
+
+        <button type="submit">提交</button>
+    </form>
+
+    <div class="auth-links">
+        <a href="/login">返回登录</a>
+    </div>
+</div>
+
+</body>
+</html>

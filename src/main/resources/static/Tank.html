@@ -1,0 +1,647 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>坦克大战界面</title>
+    <style>
+        body {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            background-color: #f0f0f0;
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background-color: skyblue;
+        }
+
+        .zhuti{
+            width: 500px;
+            height: 500px;
+        }
+        .kaishi{
+            width: 80px;
+            height: 50px;
+        }
+        .container {
+            display: flex;
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        .game-area {
+            width: 500px;
+            height: 500px;
+            display: grid;
+            grid-template-columns: repeat(100, 1fr);
+            grid-template-rows: repeat(100, 1fr);
+            border: 2px solid #333;
+        }
+
+        .snake {
+            background-color: #4CAF50;
+            border-radius: 3px;
+        }
+
+        .controls {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            padding: 20px;
+            background-color: #fff;
+            border-radius: 5px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+
+        button {
+            padding: 10px;
+            cursor: pointer;
+            background-color: #2196F3;
+            color: white;
+            border: none;
+            border-radius: 5px;
+        }
+
+        button:hover {
+            background-color: #1976D2;
+        }
+
+        #ctrl {
+            height: 200px;
+            width: 300px;
+            margin: auto;
+            /* border: 1px solid red; */
+            text-align: center;
+            margin-top: -20px;
+        }
+
+        #ctrl button {
+            background-color: saddlebrown;
+            margin-top: 20px;
+        }
+
+
+        #up {
+            width: 50px;
+            height: 30px;
+            border-radius: 20px 20px 0 0;
+        }
+
+        #left {
+            width: 30px;
+            height: 50px;
+            margin-right: 40px;
+            border-radius: 20px 0 0 20px;
+        }
+
+        #right {
+            width: 30px;
+            height: 50px;
+            margin-left: 40px;
+            border-radius: 0 20px 20px 0;
+        }
+
+        #down {
+            width: 50px;
+            height: 30px;
+            border-radius: 0 0 20px 20px;
+        }
+
+        #stop {
+            width: 50px;
+            height: 50px;
+            border-radius: 15px;
+        }
+
+        .s-head {
+            width: 5px;
+            height: 5px;
+            background: red;
+            border-radius: 4px 4px 0 0;
+        }
+
+
+        .row{
+            margin: 0 auto;
+            line-height: 0;
+        }
+        .cell{
+            width:5px;
+            height: 5px;
+            background-color: black;
+        }
+        .wall{
+            width:5px;
+            height: 5px;
+            background-color: green;
+        }
+
+        .inner {
+            width:5px;
+            height: 5px;
+            background: #0cc;
+        }
+
+        .h-up {
+            transform: rotate(0deg);
+        }
+
+        .h-down {
+            transform: rotate(180deg);
+        }
+
+        .h-left {
+            transform: rotate(-90deg);
+        }
+
+        .h-right {
+            transform: rotate(90deg);
+        }
+
+        .food {
+            width: 5px;
+            height: 5px;
+            background: orange;
+            border-radius: 4px;
+        }
+
+        .color1{
+            width:5px;
+            height: 5px;
+            background: #f7e703;
+        }
+        .color2 {
+            width:5px;
+            height: 5px;
+            background: rgb(241, 127, 5);
+        }
+        .color3 {
+            width:5px;
+            height: 5px;
+            background: rgb(225, 250, 1);
+        }
+        .color4{
+            width:5px;
+            height: 5px;
+            background: rgb(2, 243, 83);
+        }
+        .color5{
+            width:5px;
+            height: 5px;
+            background: rgb(3, 3, 253);
+        }
+        .color6{
+            width:5px;
+            height: 5px;
+            background: rgb(247, 4, 121);
+        }
+        .color7{
+            width: 5px;
+            height: 5px;
+            background: rgb(255, 0, 0);
+        }
+        .color8 {
+            width:5px;
+            height: 5px;
+            background: skyblue;
+        }
+
+        .tcs{
+            width: 100px;
+            height: 100px;
+        }
+
+
+    </style>
+</head>
+<body>
+<h1>坦克大战</h1>
+<a href="snake.html"><img src="menu.png" class="tcs"></a>
+<div class="container">
+    <div class="game-area"><img src="坦克大战.jpg" alt="" class="zhuti"></div>
+    <div class="controls">
+        <div class="score">游戏得分: 0</div>
+        <p>当前速度:</p><div class="xspeed">1</div>
+        <div class="speed-controls">
+            <button class="speed-control" data-action="decrease">-</button>
+            <button class="speed-control" data-action="increase">+</button>
+        </div>
+        <div class="buttons">
+            <button id="start"><img src="btn.png" alt="" class="kaishi"></button>
+            <button id="return"><img src="btn2.png" alt="" class="kaishi"></button>
+        </div>
+
+        <div id="ctrl">
+            <button id="up"></button>
+            <br />
+            <button id="left"></button>
+            <button id="stop">
+            </button>
+            <button id="right"></button>
+            <br />
+            <button id="down"></button>
+        </div>
+
+    </div>
+</div>
+<script >
+    var speedcontrols = document.querySelectorAll(".speed-control");
+    var xspeed = document.querySelector(".xspeed");
+    var gamearea = document.querySelector(".game-area");
+    var start = document.querySelector("#start");
+    var err = document.querySelector("#return");
+    var alertBtn = document.getElementById("alert-btn");
+    var actualWidth = gamearea.offsetWidth;
+    var actualHeight = gamearea.offsetHeight;
+    var H = actualWidth / (actualWidth / 100);
+    var W = actualHeight / (actualHeight / 100);
+    var gameMap = Array(H);
+    var direction = "h-up";
+    var l = 0;
+    var speed = 1;
+    var input = '4';
+    var stopflag = 0;
+    var hx = 50;
+    var hy = 50;
+    var zidanflag = 0;
+    var bullets = [];
+    var enbullets = [];
+    var enTanks = [];
+    var Tanksnum = 0;
+    speedcontrols.forEach((i) => {
+        i.addEventListener("click", () => {
+            if (i.dataset.action == "increase") {
+                if (speed < 10) {
+                    speed++;
+                    xspeed.innerHTML = speed;
+                }
+            } else if (i.dataset.action == "decrease") {
+                if (speed > 1) {
+                    speed--;
+                    xspeed.innerHTML = speed;
+                }
+            }
+        });
+    });
+
+    function initMap(x,y,direction){
+        for(var i=0;i<H;i++){
+            gameMap[i] = Array(W);
+            for(var j=0;j<W;j++){
+                if(i==0||i==H-1||j==0||j==W-1){
+                    gameMap[i][j] = 1;
+                }else{
+                    gameMap[i][j] = 0;
+                }
+            }
+        }
+        initTank(x,y,direction,4);
+        if(zidanflag == 1){
+            var bullet = {x: hx, y: hy, direction: zidandirection};
+            bullets.push(bullet);
+            zidanflag = 0;
+        }
+
+    }
+
+    function initTank(x,y,direction,num){
+        for(var i=x-1;i<=x+1;i++){
+            for(var j=y-1;j<=y+1;j++){
+                gameMap[j][i] = num;
+            }
+        }
+        if(direction=='h-left'){
+            gameMap[y-1][x-1]=0;
+            gameMap[y-1][x+1]=0;
+        }else if(direction=='h-right'){
+            gameMap[y+1][x-1]=0;
+            gameMap[y+1][x+1]=0;
+        }else if(direction=='h-up'){
+            gameMap[y-1][x-1]=0;
+            gameMap[y+1][x-1]=0;
+        }else if(direction=='h-down'){
+            gameMap[y-1][x+1]=0;
+            gameMap[y+1][x+1]=0
+        }
+    }
+
+    function creatTank(){
+        var x = 0;
+        var y = 0;
+        while(gameMap[x][y]!=0){
+            dir = Math.floor(Math.random()*(4));
+            x = Math.floor(Math.random()*(H-3));
+            y = Math.floor(Math.random()*(W-3));
+        }
+        if(dir==0){
+            var zddirection = "h-left";
+        }else if(dir==1){
+            var zddirection = "h-right";
+        }else if(dir==2){
+            var zddirection = "h-up";
+        }else if(dir==3){
+            var zddirection = "h-down";
+        }
+        var tank = {x: x, y: y, direction: zddirection,zidan : 0};
+        enTanks.push(tank);
+    }
+
+    function updateTanks(){
+        for(var i = enTanks.length - 1; i >= 0; i--){
+            var tank = enTanks[i];
+            initTank(tank.x, tank.y, tank.direction, 6);
+            if(ischujie(tank.x, tank.y)){
+                continue;
+            }
+            var move = Math.floor(Math.random()*(55));
+            if(move==0){
+                tank.direction = "h-left";
+                if(!ischujie(tank.x-1, tank.y)){
+                    tank.x--;
+                }
+            }else if(move==1){
+                tank.direction = "h-right";
+                if(!ischujie(tank.x+1, tank.y)){
+                    tank.x++;
+                }
+            }else if(move==2){
+                tank.direction = "h-up";
+                if(!ischujie(tank.x, tank.y-1)){
+                    tank.y--;
+                }
+            }else if(move==3){
+                tank.direction = "h-down";
+                if(!ischujie(tank.x, tank.y+1)){
+                    tank.y++;
+                }
+            }else if(move==4){
+                tank.zidan = 1;
+            }else{
+                continue;
+            }
+        }
+    }
+
+    function ispz(x,y,num){
+        if(gameMap[x][y]==num){
+            return true;
+        }else{
+            return false;
+        }
+    }
+
+
+    function updateBullets() {
+        for (var i = bullets.length - 1; i >= 0; i--) {
+            var myBullet = bullets[i];
+            if (myBullet.direction == 'h-left') myBullet.y--;
+            else if (myBullet.direction == 'h-right') myBullet.y++;
+            else if (myBullet.direction == 'h-up') myBullet.x--;
+            else if (myBullet.direction == 'h-down') myBullet.x++;
+
+            if (ischujie(myBullet.x, myBullet.y)) {
+                bullets.splice(i, 1);
+                continue;
+            }
+            for (var j = enbullets.length - 1; j >= 0; j--) {
+                var enemyBullet = enbullets[j];
+                if (myBullet.x === enemyBullet.x && myBullet.y === enemyBullet.y) {
+                    bullets.splice(i, 1);
+                    enbullets.splice(j, 1);
+                    break;
+                }
+            }
+            if (!bullets.includes(myBullet)) continue
+            for (var k = enTanks.length - 1; k >= 0; k--) {
+                var tank = enTanks[k];
+                if (Math.abs(myBullet.x - tank.x) <= 1 && Math.abs(myBullet.y - tank.y) <= 1) {
+                    enTanks.splice(k, 1);
+                    bullets.splice(i, 1);
+                    l+=10;
+                    Tanksnum--;
+                    break;
+                }
+            }
+            gameMap[myBullet.y][myBullet.x] = 5;
+        }
+
+        for (var i = enbullets.length - 1; i >= 0; i--) {
+            var enemyBullet = enbullets[i];
+
+            if (enemyBullet.direction == 'h-left') enemyBullet.y--;
+            else if (enemyBullet.direction == 'h-right') enemyBullet.y++;
+            else if (enemyBullet.direction == 'h-up') enemyBullet.x--;
+            else if (enemyBullet.direction == 'h-down') enemyBullet.x++;
+
+            if (ischujie(enemyBullet.x, enemyBullet.y)) {
+                enbullets.splice(i, 1);
+                continue;
+            }
+
+            if (Math.abs(enemyBullet.x - hx) <= 1 && Math.abs(enemyBullet.y - hy) <= 1) {
+                alert("您已退出!分数为:" + l + "分");
+                window.location.href = "Tank.html";
+            }
+            gameMap[enemyBullet.y][enemyBullet.x] = 7;
+        }
+
+        updateEnBullets();
+    }
+    function updateEnBullets() {
+        for(var i = 0;i<enTanks.length;i++){
+            if(enTanks[i].zidan == 1){
+                var bullet = {x: enTanks[i].x, y: enTanks[i].y, direction: enTanks[i].direction};
+                enbullets.push(bullet);
+                enTanks[i].zidan = 0;
+            }
+        }
+    }
+
+
+
+    function ischujie(x,y){
+        if(x<=1||x>=H-2||y<=1||y>=W-2){
+            return true;
+        }
+        return false;
+    }
+
+    function Tankmove(){
+        if(direction=="h-up"){
+            hx--;
+        }else if(direction=="h-down"){
+            hx++;
+        }else if(direction=="h-left"){
+            hy--;
+        }else if(direction=="h-right"){
+            hy++;
+        }
+        input = '';
+    }
+
+    function moveTank() {
+        var up = document.getElementById("up");
+        var down = document.getElementById("down");
+        var left = document.getElementById("left");
+        var right = document.getElementById("right");
+        var stop = document.getElementById("stop");
+        up.addEventListener("click", function() {
+            input = '2';
+        });
+        down.onclick = function() {
+            input = '8';
+        }
+        left.onclick = function() {
+            input = '4';
+        }
+        right.onclick = function() {
+            input = '6';
+        }
+        stop.onclick = function() {
+            if(stopflag==0){
+                clearInterval(zjh);
+                stopflag = 1;
+            }else{
+                zjh = setInterval(gameStar, 100 / speed);
+                stopflag = 0;
+            }
+        }
+        switch(input){
+            case '4':
+            case 'a':
+                if(!ischujie(hx,hy-1)){
+                    for(var i=hx-1;i<=hx+1;i++){
+                        for(var j=hy-1;j<=hy+1;j++){
+                            gameMap[j][i] = 4;
+                        }
+                    }
+                    gameMap[hy-1][hx-1]=0;
+                    gameMap[hy-1][hx+1]=0;
+                    direction = "h-left";
+                }
+                if(direction=="h-left"&&!ischujie(hx,hy-1)){
+                    Tankmove();
+                }
+                break;
+            case '6':
+            case 'd':
+                if(!ischujie(hx,hy+1)){
+                    for(var i=hx-1;i<=hx+1;i++){
+                        for(var j=hy-1;j<=hy+1;j++){
+                            gameMap[j][i] = 4;
+                        }
+                    }
+                    gameMap[hy+1][hx-1]=0;
+                    gameMap[hy+1][hx+1]=0;
+                    direction = "h-right";
+                }
+                if(direction=="h-right"&&!ischujie(hx,hy+1)){
+                    Tankmove();
+                }
+                break;
+            case '2':
+            case 'w':
+                if(!ischujie(hx-1,hy)){
+                    for(var i=hx-1;i<=hx+1;i++){
+                        for(var j=hy-1;j<=hy+1;j++){
+                            gameMap[j][i] = 4;
+                        }
+                    }
+                    gameMap[hy-1][hx-1]=0;
+                    gameMap[hy+1][hx-1]=0;
+                    direction = "h-up";
+                }
+                if(direction=="h-up"&&!ischujie(hx-1,hy)){
+                    Tankmove();
+                }
+                break;
+            case '8':
+            case 's':
+                if(!ischujie(hx+1,hy)){
+                    for(var i=hx-1;i<=hx+1;i++){
+                        for(var j=hy-1;j<=hy+1;j++){
+                            gameMap[j][i] = 4;
+                        }
+                    }
+                    gameMap[hy-1][hx+1]=0;
+                    gameMap[hy+1][hx+1]=0;
+                    direction = "h-down";
+                }
+                if(direction=="h-down"&&!ischujie(hx+1,hy)){
+                    Tankmove();
+                }
+                break;
+            case 'j':
+                zidandirection = direction;
+                zidanflag = 1;
+                input = '';
+                break;
+        }
+    }
+
+
+    function printMap() {
+        gamearea.innerHTML = "";
+        for(var i=0;i<H;i++){
+            var row = document.createElement("div");
+            row.className = "row";
+            for(var j=0;j<W;j++){
+                var cell = document.createElement("div");
+                if(gameMap[i][j]==0){
+                    cell.className = "cell";
+                }else if(gameMap[i][j]==1){
+                    cell.className = "wall";
+                }else if(gameMap[i][j]==2){
+                    cell = creatBody();
+                }else if(gameMap[i][j]==3){
+                    cell.className = "s-head" + " "+direction;
+                }else if(gameMap[i][j]==4){
+                    cell.className = "food";
+                }else if(gameMap[i][j]==5){
+                    cell.className = "color1";
+                }else if(gameMap[i][j]==6){
+                    cell.className = "color7";
+                }else if(gameMap[i][j]==7){
+                    cell.className = "color8";
+                }
+                row.appendChild(cell);
+            }
+            gamearea.appendChild(row);
+        }
+    }
+
+    function GetInput() {
+        document.addEventListener("keydown", function (event) {
+            if (event.key === 'w' || event.key === 'a' || event.key === 's' || event.key === 'd'||event.key === 'j') {
+                input = event.key;
+            }
+        });
+    }
+
+    GetInput();
+
+    function gameStar(){
+        gamearea.innerHTML = "";
+        initMap(hx,hy,direction);
+        moveTank();
+        updateBullets();
+        if(Tanksnum<8){
+            Tanksnum++;
+            creatTank();
+        }
+        updateTanks();
+        printMap();
+        GetInput();
+        document.querySelector(".score").innerHTML = "游戏得分: "+l;
+    }
+
+    start.onclick = function(){
+        zjh = setInterval(gameStar, 100 / speed);
+    }
+    err.onclick = function(){
+        alert("您已退出!分数为:"+l+"分");
+        window.location.href = "Tank.html";
+    }
+</script>
+</body>
+</html>

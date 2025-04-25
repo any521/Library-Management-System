@@ -1,0 +1,448 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>图书管理系统</title>
+    <style>
+        /* 动态背景样式 - 完整保留 */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            min-height: 100vh;
+            overflow-x: hidden;
+            background: linear-gradient(to bottom, #f1f4f9, #dff1ff);
+            position: relative;
+        }
+
+        .color {
+            position: absolute;
+            filter: blur(200px);
+            animation: colorMove 20s linear infinite;
+        }
+
+        .color:nth-child(1) {
+            top: -350px;
+            width: 600px;
+            height: 600px;
+            background: #ff359b;
+            animation-delay: 0s;
+        }
+
+        .color:nth-child(2) {
+            bottom: -150px;
+            left: 100px;
+            width: 500px;
+            height: 500px;
+            background: #fffd87;
+            animation-delay: -5s;
+        }
+
+        .color:nth-child(3) {
+            bottom: 50px;
+            right: 100px;
+            width: 500px;
+            height: 500px;
+            background: #00d2ff;
+            animation-delay: -10s;
+        }
+
+        .circle {
+            position: absolute;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(5px);
+            border-radius: 50%;
+            box-shadow: 0 25px 45px rgba(0, 0, 0, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.5);
+            animation: bubbleMove 10s linear infinite;
+            filter: hue-rotate(calc(var(--x) * 70deg));
+        }
+
+        @keyframes colorMove {
+            0%, 100% { transform: translate(0, 0) rotate(0deg); }
+            25% { transform: translate(100px, 150px) rotate(90deg); }
+            50% { transform: translate(-50px, 300px) rotate(180deg); }
+            75% { transform: translate(-100px, -150px) rotate(270deg); }
+        }
+
+        @keyframes bubbleMove {
+            0%, 100% { transform: translateY(-50px) scale(0.95); }
+            50% { transform: translateY(50px) scale(1.05); }
+        }
+
+        /* 内容容器优化样式 */
+        .container {
+            position: relative;
+            z-index: 2;
+            width: 90%;
+            max-width: 1200px;
+            margin: 2rem auto;
+            padding: 2rem;
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
+            display: flex;
+            flex-direction: column;
+            gap: 2rem;
+        }
+
+        /* 表单优化样式 */
+        #bookForm {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+            padding: 2rem;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 12px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.8rem;
+        }
+
+        /* 表格优化样式 */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 1rem;
+            background: rgba(255, 255, 255, 0.95);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+        }
+
+        th {
+            background: #f8f9fa;
+            padding: 1rem;
+            font-weight: 600;
+            text-align: center;
+        }
+
+        td {
+            padding: 0.8rem 1rem;
+            vertical-align: middle;
+            border-bottom: 1px solid #f0f0f0;
+            text-align: center;
+        }
+
+        tr:hover td {
+            background: #f8fafc;
+        }
+
+        /* 状态按钮样式 */
+        .status-btn {
+            padding: 0.4rem 0.8rem;
+            border-radius: 20px;
+            font-size: 0.9em;
+            transition: transform 0.2s ease;
+        }
+
+        /* 响应式设计 */
+        @media (max-width: 768px) {
+            .container {
+                padding: 1.5rem;
+            }
+            #bookForm {
+                grid-template-columns: 1fr;
+                padding: 1.5rem;
+            }
+            table {
+                font-size: 0.9em;
+            }
+        }
+
+        /* 细节优化 */
+        h1 {
+            text-align: center;
+            margin-bottom: 1.5rem;
+            color: #2c3e50;
+            font-size: 2.2rem;
+        }
+
+        label {
+            font-weight: 500;
+            color: #4a5568;
+        }
+
+        input {
+            padding: 0.8rem;
+            border: 1px solid #e2e8f0;
+            border-radius: 6px;
+            transition: border-color 0.3s ease;
+        }
+
+        input:focus {
+            border-color: #4CAF50;
+            outline: none;
+        }
+
+        button[type="submit"] {
+            background: #4CAF50;
+            padding: 0.8rem 1.5rem;
+            border-radius: 6px;
+            font-weight: 500;
+        }
+
+        /* 气泡位置 */
+        .circle:nth-child(1) { top: 20%; left: 10%; width: 100px; height: 100px; }
+        .circle:nth-child(2) { top: 60%; right: 15%; width: 120px; height: 120px; }
+        .circle:nth-child(3) { bottom: 30%; left: 25%; width: 80px; height: 80px; }
+        .circle:nth-child(4) { top: 40%; right: 5%; width: 60px; height: 60px; }
+        .circle:nth-child(5) { bottom: 10%; left: 15%; width: 90px; height: 90px; }
+             /* 消息提示样式 */
+         .message-container {
+             grid-column: 1 / -1;
+             margin-bottom: 1.5rem;
+         }
+
+        .alert {
+            position: relative;
+            padding: 1rem 2.5rem 1rem 1.25rem;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            animation: slideIn 0.3s ease-out;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .alert.error {
+            background: #fff5f5;
+            border: 1px solid #fed7d7;
+            color: #c53030;
+        }
+
+        .alert.success {
+            background: #f0fff4;
+            border: 1px solid #c6f6d5;
+            color: #2f855a;
+        }
+
+        .close-btn {
+            position: absolute;
+            right: 1rem;
+            top: 50%;
+            transform: translateY(-50%);
+            cursor: pointer;
+            font-size: 1.5rem;
+            line-height: 1;
+            opacity: 0.7;
+            transition: opacity 0.2s;
+        }
+
+        .close-btn:hover {
+            opacity: 1;
+        }
+
+        @keyframes slideIn {
+            from { transform: translateY(-20px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+    </style>
+</head>
+<body>
+<!-- 动态背景元素 -->
+<div class="color"></div>
+<div class="color"></div>
+<div class="color"></div>
+
+<div class="circle" style="--x:0"></div>
+<div class="circle" style="--x:1"></div>
+<div class="circle" style="--x:2"></div>
+<div class="circle" style="--x:3"></div>
+<div class="circle" style="--x:4"></div>
+
+<!-- 内容容器 -->
+<div class="container">
+    <h1>📚 图书管理系统</h1>
+    <!-- 在 <form id="bookForm"> 内的最上方添加 -->
+    <div class="message-container">
+        <div th:if="${errorMessage}" class="alert error">
+            <span th:text="${errorMessage}"></span>
+            <div class="close-btn" onclick="this.parentElement.remove()">×</div>
+        </div>
+        <div th:if="${successMessage}" class="alert success">
+            <span th:text="${successMessage}"></span>
+            <div class="close-btn" onclick="this.parentElement.remove()">×</div>
+        </div>
+    </div>
+    <!-- 优化后的表单 -->
+    <form id="bookForm" action="/addBook" method="post">
+        <div class="form-group">
+            <label for="bid">图书编号</label>
+            <input type="text" id="bid" name="bid" required>
+        </div>
+        <div class="form-group">
+            <label for="name">书籍名称</label>
+            <input type="text" id="name" name="name" required>
+        </div>
+        <div class="form-group">
+            <label for="des">书籍描述</label>
+            <input type="text" id="des" name="des" required>
+        </div>
+        <div class="form-group">
+            <label for="price">书籍价格</label>
+            <input type="number" id="price" name="price" step="0.01" required>
+        </div>
+        <div class="form-group" style="grid-column: 1 / -1; margin-top: 1rem;">
+            <button type="submit" style="width: 100%;">
+                添加书籍
+            </button>
+        </div>
+    </form>
+
+    <!-- 优化后的表格 -->
+    <div style="overflow-x: auto; border-radius: 8px;">
+        <table>
+            <thead>
+            <tr>
+                <th>编号</th>
+                <th>书名</th>
+                <th>描述</th>
+                <th>价格</th>
+                <th>状态</th>
+                <th>操作</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr th:each="book : ${list}">
+                <td th:text="${book.bid}"></td>
+                <td th:text="${book.name}"></td>
+                <td style="max-width: 300px;" th:text="${book.des}"></td>
+                <td th:text="'¥' + ${book.price}"></td>
+                <td>
+                    <button class="status-btn"
+                            th:text="${book.status}"
+                            th:styleappend="${book.status == '待借阅'} ?
+                                    'background: #4CAF50;' : 'background: #f44336;'">
+                    </button>
+                </td>
+                <td>
+                    <form class="delete-form" action="/deleteBook" method="post" onsubmit="return confirmDelete(this)">
+                        <input type="hidden" name="bid" th:value="${book.bid}" />
+                        <button type="submit"
+                                class="delete-btn"
+                                style="background: #f44336; padding: 0.5rem 1rem;">
+                            删除
+                        </button>
+                    </form>
+                </td>
+
+            </tr>
+            <tr th:if="${#lists.isEmpty(list)}">
+                <td colspan="6" style="text-align: center;">暂无图书数据</td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+</body>
+<script>
+    // 删除功能主逻辑
+    document.querySelectorAll('.delete-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const form = this.closest('form');
+            showDeleteConfirm(form);
+        });
+    });
+
+    function showDeleteConfirm(form) {
+        // 创建模态框
+        const modal = document.createElement('div');
+        modal.style.cssText = `
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        background: white;
+        padding: 2rem;
+        border-radius: 8px;
+        z-index: 1000;
+        text-align: center;
+    `;
+        modal.innerHTML = `
+        <h3 style="margin-bottom: 1rem;">确认删除？</h3>
+        <p>您将要删除《${form.closest('tr').children[1].innerText}》</p>
+        <div style="margin-top: 1.5rem;">
+            <button id="confirmDelete" class="confirm-btn">确认</button>
+            <button id="cancelDelete" class="cancel-btn">取消</button>
+        </div>
+    `;
+
+        // 创建遮罩层
+        const overlay = document.createElement('div');
+        overlay.style.cssText = `
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0,0,0,0.5);
+        z-index: 999;
+    `;
+
+        document.body.append(modal, overlay);
+
+        // 确认按钮逻辑
+        modal.querySelector('#confirmDelete').addEventListener('click', () => {
+            // 提交表单
+            form.submit();
+            cleanup();
+        });
+
+        // 取消按钮逻辑（修复重点）
+        modal.querySelector('#cancelDelete').addEventListener('click', () => {
+            cleanup();
+            return false; // 关键修正点
+        });
+
+        // 点击遮罩层关闭
+        overlay.addEventListener('click', cleanup);
+
+        // 清理函数
+        function cleanup() {
+            modal.remove();
+            overlay.remove();
+            // 移除所有事件监听器
+            overlay.removeEventListener('click', cleanup);
+        }
+    }
+
+    // 阻止表单默认提交行为（关键修正点）
+    document.querySelectorAll('.delete-form').forEach(form => {
+        form.addEventListener('submit', (e) => {
+            e.preventDefault(); // 必须阻止默认行为
+        });
+    });
+</script>
+
+<style>
+    /* 添加按钮样式 */
+    .confirm-btn, .cancel-btn {
+        padding: 0.5rem 1.5rem;
+        margin: 0 0.5rem;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        transition: opacity 0.2s;
+    }
+
+    .confirm-btn {
+        background: #f44336;
+        color: white;
+    }
+
+    .cancel-btn {
+        background: #e0e0e0;
+        color: #333;
+    }
+
+    .confirm-btn:hover, .cancel-btn:hover {
+        opacity: 0.9;
+    }
+</style>
+</html>

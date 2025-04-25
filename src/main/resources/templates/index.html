@@ -1,0 +1,604 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>学生管理系统</title>
+    <style>
+        /* 原始背景样式保留 */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            min-height: 100vh;
+            overflow-x: hidden;
+            background: linear-gradient(to bottom, #f1f4f9, #dff1ff);
+            position: relative;
+        }
+
+        .color {
+            position: absolute;
+            filter: blur(200px);
+            animation: colorMove 20s linear infinite;
+        }
+
+        .color:nth-child(1) {
+            top: -350px;
+            width: 600px;
+            height: 600px;
+            background: #ff359b;
+            animation-delay: 0s;
+        }
+
+        .color:nth-child(2) {
+            bottom: -150px;
+            left: 100px;
+            width: 500px;
+            height: 500px;
+            background: #fffd87;
+            animation-delay: -5s;
+        }
+
+        .color:nth-child(3) {
+            bottom: 50px;
+            right: 100px;
+            width: 500px;
+            height: 500px;
+            background: #00d2ff;
+            animation-delay: -10s;
+        }
+
+        .circle {
+            position: absolute;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(5px);
+            border-radius: 50%;
+            box-shadow: 0 25px 45px rgba(0, 0, 0, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.5);
+            animation: bubbleMove 10s linear infinite;
+            filter: hue-rotate(calc(var(--x) * 70deg));
+        }
+
+        @keyframes colorMove {
+            0%, 100% { transform: translate(0, 0) rotate(0deg); }
+            25% { transform: translate(100px, 150px) rotate(90deg); }
+            50% { transform: translate(-50px, 300px) rotate(180deg); }
+            75% { transform: translate(-100px, -150px) rotate(270deg); }
+        }
+
+        @keyframes bubbleMove {
+            0%, 100% { transform: translateY(-50px) scale(0.95); }
+            50% { transform: translateY(50px) scale(1.05); }
+        }
+
+        /* 新增优化样式 */
+        .container {
+            position: relative;
+            z-index: 2;
+            width: 90%;
+            max-width: 1200px;
+            margin: 2rem auto;
+            padding: 2rem;
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
+            display: flex;
+            flex-direction: column;
+            gap: 2rem;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+
+        #bookForm {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1.5rem;
+            padding: 2rem;
+            background: rgba(255, 255, 255, 0.95);
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 1rem;
+            background: rgba(255, 255, 255, 0.9);
+        }
+
+        th, td {
+            padding: 12px;
+            border-bottom: 1px solid #eee;
+            text-align: center;
+            vertical-align: middle;
+        }
+
+        tr:hover td {
+            background: #f1f4f9;
+        }
+
+        button, input[type="submit"] {
+            transition: all 0.2s ease;
+            padding: 0.8rem 1.2rem;
+            border-radius: 6px;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 1rem;
+            }
+            #bookForm {
+                grid-template-columns: 1fr;
+                padding: 1rem;
+            }
+            table {
+                font-size: 0.9em;
+            }
+        }
+
+        /* 气泡位置保持原始设置 */
+        .circle:nth-child(1) { top: 20%; left: 10%; width: 100px; height: 100px; }
+        .circle:nth-child(2) { top: 60%; right: 15%; width: 120px; height: 120px; }
+        .circle:nth-child(3) { bottom: 30%; left: 25%; width: 80px; height: 80px; }
+        .circle:nth-child(4) { top: 40%; right: 5%; width: 60px; height: 60px; }
+        .circle:nth-child(5) { bottom: 10%; left: 15%; width: 90px; height: 90px; }
+
+        .system-identity {
+            position: absolute;
+            left: -80px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 120px;
+            height: 120px;
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            z-index: 3;
+        }
+
+        .system-identity::before {
+            content: "🎓";
+            font-size: 3.5rem;
+            transform: rotate(15deg);
+        }
+
+        .container h1 {
+            position: relative;
+            padding-left: 60px;
+        }
+
+        .container h1::before {
+            content: "👥";
+            position: absolute;
+            left: 0;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 2.5rem;
+        }
+
+        @media (max-width: 768px) {
+            .system-identity {
+                left: -60px;
+                width: 80px;
+                height: 80px;
+            }
+            .system-identity::before {
+                font-size: 2.5rem;
+            }
+            .container h1 {
+                padding-left: 50px;
+                font-size: 1.8rem;
+            }
+            .container h1::before {
+                font-size: 2rem;
+            }
+        }
+             /* 消息提示样式 */
+         .message-container {
+             grid-column: 1 / -1;
+             margin-bottom: 1.5rem;
+         }
+
+        .alert {
+            position: relative;
+            padding: 1rem 2.5rem 1rem 1.25rem;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            animation: slideIn 0.3s ease-out;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .alert.error {
+            background: #fff5f5;
+            border: 1px solid #fed7d7;
+            color: #c53030;
+        }
+
+        .alert.success {
+            background: #f0fff4;
+            border: 1px solid #c6f6d5;
+            color: #2f855a;
+        }
+
+        .close-btn {
+            position: absolute;
+            right: 1rem;
+            top: 50%;
+            transform: translateY(-50%);
+            cursor: pointer;
+            font-size: 1.5rem;
+            line-height: 1;
+            opacity: 0.7;
+            transition: opacity 0.2s;
+        }
+
+        .close-btn:hover {
+            opacity: 1;
+        }
+
+        @keyframes slideIn {
+            from { transform: translateY(-20px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+        /* 新增多行错误显示样式 */
+        .alert pre {
+            white-space: pre-wrap;
+            margin: 0;
+            line-height: 1.5;
+            font-family: inherit;
+        }
+        /* 时间与游戏入口容器 */
+        .time-game-container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+
+        /* 修改游戏按钮样式 */
+        .game-entry-btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 12px 24px;
+            background: linear-gradient(145deg, #ff7eb3 0%, #ff758c 100%);
+            color: white;
+            border-radius: 30px;
+            font-weight: 500;
+            text-decoration: none;
+            box-shadow: 0 4px 6px rgba(255, 118, 140, 0.2);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+            border: none;
+            font-size: 16px;
+            line-height: 1.5;
+        }
+
+        /* 添加动态微交互 */
+        .game-entry-btn::after {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: linear-gradient(
+                    45deg,
+                    transparent,
+                    rgba(255, 255, 255, 0.3),
+                    transparent
+            );
+            transform: rotate(45deg);
+            transition: 0.5s;
+        }
+
+        .game-entry-btn:hover::after {
+            animation: btnShine 1.5s ease-in-out forwards;
+        }
+
+        /* 添加游戏手柄图标 */
+        .game-entry-btn::before {
+            content: '';
+            display: inline-block;
+            width: 24px;
+            height: 24px;
+            margin-right: 8px;
+            background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path fill="white" d="M21 7H3c-1.1 0-2 .9-2 2v6c0 1.1.9 2 2 2h18c1.1 0 2-.9 2-2V9c0-1.1-.9-2-2-2zm-10 7H8v-2h3v-3h2v3h3v2h-3v3h-2v-3z"/></svg>');
+        }
+
+        /* 点击动效 */
+        .game-entry-btn:active {
+            transform: scale(0.96);
+            box-shadow: 0 2px 4px rgba(255, 118, 140, 0.3);
+        }
+
+        @keyframes btnShine {
+            0% { transform: translateX(-100%) rotate(45deg); }
+            100% { transform: translateX(100%) rotate(45deg); }
+        }
+
+        /* 移动端优化 */
+        @media (max-width: 480px) {
+            .game-entry-btn {
+                padding: 10px 20px;
+                font-size: 14px;
+                border-radius: 26px;
+            }
+
+            .game-entry-btn::before {
+                width: 20px;
+                height: 20px;
+                margin-right: 6px;
+            }
+        }
+        /* 新增时间显示美化样式 */
+        .time-display {
+            position: relative;
+            padding: 1.5rem;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            box-shadow: 0 12px 24px rgba(0, 0, 0, 0.1);
+            backdrop-filter: blur(10px);
+            min-width: 280px;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .time-badge {
+            position: absolute;
+            top: -12px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #4a90e2;
+            color: white;
+            padding: 4px 16px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            font-weight: 500;
+            box-shadow: 0 4px 12px rgba(74, 144, 226, 0.3);
+        }
+
+        .time-wrapper {
+            display: flex;
+            align-items: baseline;
+            margin-bottom: 0.8rem;
+        }
+
+        .hour-minute {
+            font-family: 'Roboto Mono', monospace;
+            font-size: 3.5rem;  /* 放大主时间 */
+            font-weight: 700;
+            background: linear-gradient(135deg, #2c3e50, #4a90e2);
+            -webkit-background-clip: text;
+            color: transparent;
+            letter-spacing: -2px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s ease;
+        }
+
+        .second {
+            font-family: 'Roboto Mono', monospace;
+            font-size: 1.8rem;  /* 放大秒数 */
+            color: #7f8c8d;
+            margin-left: 0.3rem;
+            opacity: 0.9;
+        }
+
+        .date-container {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #34495e;
+            font-size: 1.3rem;  /* 放大日期 */
+            gap: 0.3rem;
+        }
+
+        .year {
+            font-weight: 600;
+            color: #e74c3c;
+            position: relative;
+            padding-right: 0.5rem;
+        }
+
+        .year::after {
+            content: '';
+            position: absolute;
+            right: 0;
+            top: 50%;
+            transform: translateY(-50%);
+            height: 60%;
+            width: 2px;
+            background: #bdc3c7;
+        }
+
+        .date-divider {
+            color: #95a5a6;
+            font-weight: 300;
+            transform: translateY(-1px);
+        }
+
+        /* 新增动态效果 */
+        .time-display:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 16px 32px rgba(0, 0, 0, 0.15);
+        }
+
+        .time-display:hover .hour-minute {
+            transform: scale(1.02);
+            text-shadow: 3px 3px 6px rgba(0, 0, 0, 0.15);
+        }
+
+        /* 响应式调整 */
+        @media (max-width: 768px) {
+            .time-display {
+                padding: 1rem;
+                min-width: 240px;
+            }
+
+            .hour-minute {
+                font-size: 2.8rem;
+            }
+
+            .second {
+                font-size: 1.4rem;
+            }
+
+            .date-container {
+                font-size: 1.1rem;
+            }
+        }
+
+        /* 新增时间跳动动画 */
+        @keyframes timePulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.02); }
+        }
+
+        .hour-minute {
+            animation: timePulse 10s ease-in-out infinite;
+        }
+    </style>
+</head>
+<body>
+<!-- 原始背景元素 -->
+<div class="color"></div>
+<div class="color"></div>
+<div class="color"></div>
+
+<div class="circle" style="--x:0"></div>
+<div class="circle" style="--x:1"></div>
+<div class="circle" style="--x:2"></div>
+<div class="circle" style="--x:3"></div>
+<div class="circle" style="--x:4"></div>
+
+<!-- 优化后的内容容器 -->
+<div class="container">
+    <!-- 在container容器开始处添加标识 -->
+    <div class="container">
+        <div class="system-identity"></div>
+        <h1>学生管理系统</h1>
+        <!-- 添加时间与游戏入口容器 -->
+        <div class="time-game-container">
+            <div class="time-display">
+                <div class="time-badge">当前时间</div>
+                <div class="time-wrapper">
+                    <span class="hour-minute" th:text="${#temporals.format(currentTime, 'HH:mm')}">14:44</span>
+                    <span class="second" th:text="${#temporals.format(currentTime, ':ss')}">:30</span>
+                </div>
+                <div class="date-container">
+                    <span class="year" th:text="${#temporals.year(currentTime)}">2025</span>
+                    <span class="date-divider">/</span>
+                    <span class="month" th:text="${#temporals.month(currentTime)}">04</span>
+                    <span class="date-divider">/</span>
+                    <span class="day" th:text="${#temporals.day(currentTime)}">24</span>
+                </div>
+            </div>
+            <a href="/gameStart" class="game-entry-btn">
+                <svg class="game-icon" viewBox="0 0 24 24">
+                    <path fill="currentColor" d="M21 7H3c-1.1 0-2 .9-2 2v6c0 1.1.9 2 2 2h18c1.1 0 2-.9 2-2V9c0-1.1-.9-2-2-2zm-10 7H8v-2h3v-3h2v3h3v2h-3v3h-2v-3z"/>
+                </svg>
+                进入游戏
+            </a>
+        </div>
+        <div class="message-container">
+            <div th:if="${errorMessage}" class="alert error">
+                <span th:text="${errorMessage}"></span>
+                <div class="close-btn" onclick="this.parentElement.remove()">×</div>
+            </div>
+            <div th:if="${successMessage}" class="alert success">
+                <span th:text="${successMessage}"></span>
+                <div class="close-btn" onclick="this.parentElement.remove()">×</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="action-buttons">
+        <form id="Books" action="Books" method="post">
+            <input type="submit" value="书籍信息" class="btn" style="width: 120px;">
+        </form>
+        <form id="borrow" action="borrow" method="post">
+            <input type="submit" value="借阅信息" class="btn" style="width: 120px;">
+        </form>
+    </div>
+
+    <form id="bookForm" action="/index" method="post">
+        <div class="form-group">
+            <label for="sid">编号：</label>
+            <input type="text" id="sid" name="sid" required>
+        </div>
+        <div class="form-group">
+            <label for="name">姓名：</label>
+            <input type="text" id="name" name="name" required>
+        </div>
+        <div class="form-group">
+            <label for="sex">性别：</label>
+            <input type="text" id="sex" name="sex" required>
+        </div>
+        <div class="form-group">
+            <label for="grade">年级：</label>
+            <input type="number" id="grade" name="grade" required>
+        </div>
+        <div class="form-group">
+            <label for="score">分数：</label>
+            <input type="number" id="score" name="score" step="0.01" required>
+        </div>
+        <div class="form-group" style="grid-column: 1 / -1; margin-top: 1rem;">
+            <button type="submit" style="width: 100%; padding: 0.8rem;">
+                添加学生
+            </button>
+        </div>
+    </form>
+
+    <div style="overflow-x: auto;">
+        <table>
+            <thead>
+            <tr>
+                <th>编号</th>
+                <th>姓名</th>
+                <th>性别</th>
+                <th>年级</th>
+                <th>分数</th>
+                <th>操作</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr th:each="student : ${list}">
+                <td th:text="${student.sid}"></td>
+                <td th:text="${student.name}"></td>
+                <td th:text="${student.sex}"></td>
+                <td th:text="${student.grade}"></td>
+                <td th:text="${student.score}"></td>
+                <td>
+                    <div class="btn-group">
+                        <form class="delete-form" action="/delete" method="post">
+                            <input type="hidden" name="sid" th:value="${student.sid}">
+                            <button type="submit" class="delete-btn"
+                                    style="background: #dc3545; padding: 0.4rem 0.8rem;">
+                                删除
+                            </button>
+                        </form>
+                    </div>
+                </td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+</body>
+</html>

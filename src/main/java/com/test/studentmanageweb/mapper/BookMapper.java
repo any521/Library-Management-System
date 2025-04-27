@@ -2,7 +2,6 @@ package com.test.studentmanageweb.mapper;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import com.test.studentmanageweb.entity.Book;
-import com.test.studentmanageweb.entity.Borrow;
 import org.apache.ibatis.annotations.*;
 
 

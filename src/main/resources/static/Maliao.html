@@ -1,0 +1,689 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>超级马里奥</title>
+    <style>
+        body{
+            background-color: skyblue;
+        }
+
+        h1{
+            text-align: center;
+        }
+
+        #maliao{
+            border: 1px solid black;
+        }
+
+        #diji{
+            border: 1px solid black;
+        }
+    </style>
+</head>
+<body>
+<h1>超级马里奥</h1>
+<div style="color: red;" id="count"></div>
+<canvas id="maliao" width="800" height="600"></canvas>
+<canvas id="diji" width="800" height="40"></canvas>
+<script>
+    const canvas = document.querySelector('#maliao');
+    const c = canvas.getContext('2d');
+    const diji = document.querySelector('#diji');
+    const c1 = diji.getContext('2d');
+    var count = document.querySelector('#count');
+    const gravity = 0.5;
+
+    // 玩家控制状态对象
+    const cursorKeys = {
+        left: { pressed: false },
+        right: { pressed: false },
+        down : { pressed: false },
+        j : { pressed: false }
+    };
+
+    // 游戏对象预声明
+    let player,flag,castle,h = 10,fenshu = 0,platform = [],enemy = [],luckRect = [],pipe = [],DiJi = [],platform1 = [];
+
+    // 键盘事件监听（必须先于animate定义）
+    window.addEventListener('keydown', (e) =>{
+        switch (e.key.toLowerCase()) {
+            case 'a':
+            case 'arrowleft':
+                cursorKeys.left.pressed = true;
+                break;
+            case 'd':
+            case 'arrowright':
+                cursorKeys.right.pressed = true;
+                break;
+            case 'w':
+            case 'arrowup':
+                if(player.isCanskip){
+                    player.velocity.y = -h;
+                }
+                break;
+            case 's':
+                cursorKeys.down.pressed = true;
+                break;
+            case 'j':
+                cursorKeys.j.pressed = true;
+                break;
+        }
+    });
+
+    window.addEventListener('keyup', (e) => {
+        switch (e.key.toLowerCase()) {
+            case 'a':
+            case 'arrowleft':
+                cursorKeys.left.pressed = false;
+                break;
+            case 'd':
+            case 'arrowright':
+                cursorKeys.right.pressed = false;
+                break;
+            case 'j':
+                cursorKeys.j.pressed = false;
+                break;
+        }
+    });
+
+    class Player {
+        constructor(x, y, width, height, imagePath) {
+            this.position = { x, y };
+            this.velocity = { x: 0, y: 0 };
+            this.width = width;
+            this.height = height;
+            this.isCanskip = true;
+
+            this.image = new Image();
+            this.image.src = imagePath;
+            this.isLoaded = true;
+        }
+
+        draw() {
+            c.drawImage(
+                this.image,
+                this.position.x,
+                this.position.y,
+                this.width,
+                this.height
+            );
+        }
+
+        update() {
+            this.position.x += this.velocity.x;
+            this.position.y += this.velocity.y;
+
+            // 地面碰撞
+            if (this.position.y + this.height > canvas.height) {
+                this.position.y = canvas.height - this.height;
+                this.velocity.y = 0;
+            } else {
+                this.velocity.y += gravity;
+            }
+
+            this.draw();
+        }
+    }
+
+    class Enemy {
+        constructor(x, y, width, height, imagePath) {
+            this.position = { x, y };
+            this.width = width;
+            this.height = height;
+            this.velocity = { x: 2.5, y: 0 };
+            this.image = new Image();
+            this.image.src = imagePath;
+            this.isLoaded = true;
+            this.x0 = x;
+            this.y0 = y;
+        }
+        draw() {
+            c.drawImage(
+                this.image,
+                this.position.x,
+                this.position.y,
+                this.width,
+                this.height
+            );
+        }
+        update() {
+            this.position.x += this.velocity.x;
+            this.position.y += this.velocity.y;
+
+            if (this.position.y + this.height > canvas.height) {
+                this.position.y = canvas.height - this.height;
+                this.velocity.y = 0;
+            } else {
+                this.velocity.y += gravity;
+            }
+
+            if(this.position.x<this.x0-50){
+                this.velocity.x = -this.velocity.x;
+            }else if(this.position.x>this.x0+50){
+                this.velocity.x = -this.velocity.x;
+            }
+            this.draw();
+        }
+    }
+
+    class Platform {
+        constructor(x, y, width, height, imagePath,imagePath1) {
+            this.position = { x, y };
+            this.width = width;
+            this.height = height;
+            this.image = new Image();
+            this.image.src = imagePath;
+            this.isLoaded = false;
+            this.image1 = new Image();
+            this.image1.src = imagePath1;
+            this.isLoaded1 = true;
+            this.cnt = 0;
+        }
+
+        draw() {
+            c.drawImage(
+                this.image1,
+                this.position.x,
+                this.position.y,
+                this.width,
+                this.height
+            )
+            if (this.isLoaded) {
+                c.drawImage(
+                    this.image,
+                    this.position.x,
+                    this.position.y-20,
+                    this.width,
+                    this.height
+                )
+            }
+        }
+    }
+
+    class Platform1{
+        constructor(x, y, width, height, imagePath) {
+            this.position = { x, y };
+            this.width = width;
+            this.height = height;
+            this.image = new Image();
+            this.image.src = imagePath;
+            this.isLoaded = true;
+        }
+        draw() {
+            c.drawImage(
+                this.image,
+                this.position.x,
+                this.position.y,
+                this.width,
+                this.height
+            )
+        }
+    }
+
+    class Diji{
+        constructor(x, y, width, height, imagePath) {
+            this.position = { x, y };
+            this.width = width;
+            this.height = height;
+            this.image = new Image();
+            this.image.src = imagePath;
+            this.isLoaded = true;
+        }
+        draw() {
+            c1.drawImage(
+                this.image,
+                this.position.x,
+                this.position.y,
+                this.width,
+                this.height
+            )
+        }
+    }
+
+    class LuckRect {
+        constructor(x, y, width, height,imagePath,imagePath1) {
+            this.position = { x, y };
+            this.width = width;
+            this.height = height;
+            this.x0 = x;
+            this.y0 = y-20;
+            this.cnt = 0;
+
+            this.image = new Image();
+            this.image.src = imagePath;
+            this.isLoaded = true;
+            this.image1 = new Image();
+            this.image1.src = imagePath1;
+            this.isLoaded1 = false;
+        }
+        draw() {
+            c.drawImage(
+                this.image,
+                this.position.x,
+                this.position.y,
+                this.width,
+                this.height
+            )
+            if (this.isLoaded1) {
+                c.drawImage(
+                    this.image1,
+                    this.x0,
+                    this.y0,
+                    this.width,
+                    this.height
+                )
+            }
+        }
+    }
+
+    class Pipe{
+        constructor(x, y, width, height, imagePath) {
+            this.position = { x, y };
+            this.width = width;
+            this.height = height;
+            this.image = new Image();
+            this.image.src = imagePath;
+            this.isLoaded = true;
+        }
+        draw() {
+            c.drawImage(
+                this.image,
+                this.position.x,
+                this.position.y,
+                this.width,
+                this.height
+            );
+        }
+    }
+
+    class Flag{
+        constructor(x, y, width, height, imagePath) {
+            this.position = { x, y };
+            this.width = width;
+            this.height = height;
+            this.image = new Image();
+            this.image.src = imagePath;
+            this.isLoaded = true;
+        }
+        draw() {
+            c.drawImage(
+                this.image,
+                this.position.x,
+                this.position.y,
+                this.width,
+                this.height
+            )
+        }
+    }
+
+    class Castle{
+        constructor(x, y, width, height, imagePath) {
+            this.position = { x, y };
+            this.width = width;
+            this.height = height;
+            this.image = new Image();
+            this.image.src = imagePath;
+            this.isLoaded = true;
+        }
+        draw() {
+            c.drawImage(
+                this.image,
+                this.position.x,
+                this.position.y,
+                this.width,
+                this.height
+            )
+        }
+    }
+
+    function handleMovement() {
+        if (cursorKeys.left.pressed) {
+            player.velocity.x = -5;
+        } else if (cursorKeys.right.pressed) {
+            player.velocity.x = 5;
+        } else {
+            player.velocity.x = 0;
+        }
+    }
+
+    function checkPlatformCollision() {
+        for (let i = 0; i < platform.length; i++) {
+            if (
+                player.position.y + player.height <= platform[i].position.y &&
+                player.position.y + player.height + player.velocity.y >= platform[i].position.y &&
+                player.position.x + player.width >= platform[i].position.x &&
+                player.position.x <= platform[i].position.x + platform[i].width
+            ) {
+                player.velocity.y = 0;
+                player.position.y = platform[i].position.y - player.height;
+                if(platform[i].isLoaded){
+                    platform[i].isLoaded = false;
+                    fenshu+=1/27;
+                }
+            } else if (
+                player.position.y <= platform[i].position.y + platform[i].height &&
+                player.position.y + player.height + player.velocity.y >= platform[i].position.y + platform[i].height &&
+                player.position.x + player.width >= platform[i].position.x &&
+                player.position.x <= platform[i].position.x + platform[i].width
+            ) {
+                player.velocity.y = 5;
+                if(platform[i].cnt<1){
+                    platform[i].cnt++;
+                    platform[i].isLoaded = true;
+                }else if(platform[i].cnt==1&&!platform[i].isLoaded){
+                    if(player.height==40){
+                        platform.splice(i,1);
+                    }
+                }
+            }
+            //碰到旗帜就往下滑动
+            if(player.position.y+player.height>=flag.position.y&&player.position.y+player.height<=flag.position.y+flag.height&&
+                player.position.x+player.width>=flag.position.x&&player.position.x<=flag.position.x+flag.width){
+                player.velocity.y = 5;
+                flag.position.y+=5;
+                flag.height-=5;
+                fenshu+=2.5;
+            }
+        }
+
+        for (let i = 0; i < platform1.length; i++) {
+            const p = platform1[i];
+            if (player.position.x < p.position.x + p.width &&
+                player.position.x + player.width > p.position.x &&
+                player.position.y < p.position.y + p.height &&
+                player.position.y + player.height > p.position.y) {
+
+                const overlapX = Math.min(
+                    player.position.x + player.width - p.position.x,
+                    p.position.x + p.width - player.position.x
+                );
+                const overlapY = Math.min(
+                    player.position.y + player.height - p.position.y,
+                    p.position.y + p.height - player.position.y
+                );
+
+                if (overlapX < overlapY) {
+                    if (player.position.x < p.position.x) {
+                        player.position.x = p.position.x - player.width;
+                    } else {
+                        player.position.x = p.position.x + p.width;
+                    }
+                    player.velocity.x = 0;
+                } else {
+                    if (player.position.y < p.position.y) {
+                        player.position.y = p.position.y - player.height;
+                        player.velocity.y = 0;
+                    } else {
+                        player.position.y = p.position.y + p.height;
+                        player.velocity.y *= 0.5;
+                    }
+                }
+            }
+        }
+
+        for (let i = 0; i < luckRect.length; i++) {
+            if (
+                player.position.y + player.height <= luckRect[i].position.y &&
+                player.position.y + player.height + player.velocity.y >= luckRect[i].position.y &&
+                player.position.x + player.width >= luckRect[i].position.x &&
+                player.position.x <= luckRect[i].position.x + luckRect[i].width
+            ) {
+                player.velocity.y = 0;
+                player.position.y = luckRect[i].position.y - player.height;
+                if(luckRect[i].isLoaded1){
+                    luckRect[i].isLoaded1 = false;
+                    player.height = 40;
+                    h = 20;
+                    fenshu+=2;
+                }
+            }else if(player.position.y<=luckRect[i].position.y+15 &&
+                player.position.y + player.height + player.velocity.y >= luckRect[i].position.y+15&&
+                player.position.x + player.width >= luckRect[i].position.x &&
+                player.position.x <= luckRect[i].position.x + luckRect[i].width){
+                player.velocity.y = 5;
+                if(luckRect[i].cnt<1){
+                    luckRect[i].cnt++;
+                    luckRect[i].isLoaded1 = true;
+                }
+                luckRect[i].image.src = "幸运方块1.png";
+            }
+        }
+
+        for (let i = 0; i < enemy.length; i++) {
+            if (
+                player.position.y + player.height <= enemy[i].position.y &&
+                player.position.y + player.height + player.velocity.y >= enemy[i].position.y &&
+                player.position.x + player.width >= enemy[i].position.x &&
+                player.position.x <= enemy[i].position.x + enemy[i].width
+            ){
+                player.velocity.y = 0;
+                player.position.y = enemy[i].position.y - player.height;
+                enemy.splice(i,1);
+                fenshu++;
+            }else if(player.position.y<=enemy[i].position.y+5 &&
+                player.position.y + player.height + player.velocity.y >= enemy[i].position.y+5&&
+                player.position.x + player.width >= enemy[i].position.x &&
+                player.position.x <= enemy[i].position.x + enemy[i].width){
+                if(player.height==20){
+                    init();
+                    alert("游戏结束,分数为: "+fenshu);
+                    h = 10;
+                    fenshu  = 0;
+                    return;
+                }else if(player.height==40){
+                    player.height = 20;
+                    h = 10;
+                    enemy.splice(i,1);
+                }
+            }
+        }
+
+        for (let i = 0; i < pipe.length; i++) {
+            if (
+                player.position.y + player.height <= pipe[i].position.y &&
+                player.position.y + player.height + player.velocity.y >= pipe[i].position.y &&
+                player.position.x + player.width >= pipe[i].position.x &&
+                player.position.x <= pipe[i].position.x + pipe[i].width
+            ){
+                if(!cursorKeys.down.pressed){
+                    player.velocity.y = 0;
+                }else{
+                    player.position.y = pipe[i].position.y - player.height;
+                    player.isCanskip = false;
+                    alert("你将掉下管道，可以左右移动，但是无法跳跃！想解除可以刷新页面!")
+                }
+            }else if(player.position.x+player.width>pipe[i].position.x&&
+                player.position.x<pipe[i].position.x+pipe[i].width&&
+                player.position.y+player.height>=pipe[i].position.y){
+                player.velocity.x = -player.velocity.x;
+            }
+        }
+    }
+
+    function init() {
+        platform = [];
+        platform1 = [];
+        enemy = [];
+        luckRect = [];
+        pipe = [];
+        DiJi = [];
+        cursorKeys.down.pressed = false;
+
+
+        cursorKeys.left.pressed = false;
+        cursorKeys.right.pressed = false;
+        cameraOffsetX = 0;
+
+        // 初始化玩家
+        player = new Player(100, 100, 20, 20, "超级玛丽.jpg");
+        flag = new Flag(11500,200,10,400,"旗帜.png");
+        castle = new Castle(12000, 200, 400, 400, "城堡.png");
+
+        // ================= 地基生成 =================
+        const groundBaseY = canvas.height - 40;
+        const groundBaseY1 = diji.height - 40;
+        for(let y = 0; y < 2; y++) {
+            for(let x = 0; x < 40; x++) {
+                DiJi.push(new Diji(x * 20, groundBaseY1 + y * 20, 20, 20, "地基.png"));
+            }
+        }
+
+        // ================= 紧凑平台生成 =================
+        const platformPatterns = [
+            {x:200, y:-80, len:4},    // 提升高度
+            {x:350, y:-120, len:3},   // 更密集间隔
+            {x:500, y:-100, len:3, move:true}
+        ];
+
+        Array.from({length:40}, (_,i) => {
+            const pattern = platformPatterns[i%3];
+            const x = pattern.x + i * 400;  // 间隔从600减少到400
+            const y = groundBaseY + pattern.y;
+            const len = pattern.len + (i%2);
+
+            if(pattern.move) {
+                const platformGroup = [];
+                for(let j=0; j<len; j++) {
+                    const p = new Platform(
+                        x + j*20, y, 20, 20,
+                        "金币.jpg",
+                        "墙1.png"
+                    );
+                    p.moveRange = 80;     // 移动范围缩小
+                    p.speed = 0.7;        // 移动速度加快
+                    p.originalX = x + j*20;
+                    platformGroup.push(p);
+                }
+                platform.push(...platformGroup);
+            } else {
+                const platform1Config = Array.from({length:20}, (_,i) => [
+                    i * 400 + 200,        // 间隔缩小到400
+                    groundBaseY - 80 - (i%3)*30,  // 垂直间距减小
+                    3 + (i%4)
+                ]);
+                platform1Config.forEach(([x, y, len]) => {
+                    for(let i = 0; i < len; i++) {
+                        platform.push(new Platform(
+                            x + i * 20, y, 20, 20,
+                            "金币.jpg",
+                            "墙1.png"
+                        ));
+                    }
+                });
+            }
+        });
+
+        // ================= 紧凑特殊平台 =================
+        const specialShapes = [
+            [[0,0],[20,0],[40,0],[60,0]],
+            [[0,0],[20,20],[40,40]],
+            [[0,0],[20,-20],[40,0]],
+            [[0,0],[20,0],[40,0],[20,-20]],
+            [[0,0],[20,0],[40,0],[60,0],[80,0],[40,-40]],
+        ];
+
+        specialShapes.forEach((shape, index) => {
+            const baseX = 800 + index * 600;  // 间隔缩小到600
+            const baseY = groundBaseY - 120;  // 整体高度提升
+            shape.forEach(([dx, dy]) => {
+                platform1.push(new Platform1(
+                    baseX + dx,
+                    baseY + dy,
+                    20, 20,
+                    "墙2.png"
+                ));
+            });
+        });
+
+        // ================= 紧凑敌人生成 =================
+        Array.from({length:30}, (_,i) => [
+            300 + i * 350,               // 间隔缩小到350
+            groundBaseY - 80 - (i%3)*30
+        ]).forEach(([x, y]) => {
+            enemy.push(new Enemy(x, y, 20, 20, '敌人1.jpg'));
+        });
+
+        // ================= 紧凑管道生成 =================
+        Array.from({length:24}, (_,i) => ({
+            x: 400 + i * 320,           // 间隔缩小到320
+            height: 80 + (i%4)*40
+        })).forEach(({x, height}) => {
+            pipe.push(new Pipe(
+                x,
+                groundBaseY - height,
+                50,
+                canvas.height - groundBaseY + height,
+                "管道2.png",
+                "管道1.png"
+            ));
+        });
+
+        // ================= 紧凑幸运方块 =================
+        [
+            [650,150], [950,100], [1250,80], [1550,120],
+            [1850,90], [2150,110], [2450,70], [2750,130]
+        ].forEach(([x, y]) => {
+            luckRect.push(new LuckRect(
+                x, y, 20, 20,
+                "幸运方块.jpg",
+                "蘑菇.jpg"
+            ));
+        });
+    }
+
+    // 相机系统
+    let cameraOffsetX = 0;
+    const cameraDeadzone = 0.4; // 增大镜头跟踪区域
+
+    function animate() {
+        requestAnimationFrame(animate);
+        c.clearRect(0, 0, canvas.width, canvas.height);
+
+        // 相机跟踪逻辑
+        const rightBoundary = canvas.width * (1 - cameraDeadzone);
+        if (player.position.x > rightBoundary) {
+            cameraOffsetX = player.position.x - rightBoundary;
+        } else if (player.position.x < canvas.width * cameraDeadzone) {
+            cameraOffsetX = player.position.x - canvas.width * cameraDeadzone;
+        }
+
+        c.save();
+        c.translate(-cameraOffsetX, 0);
+        c1.save();
+        c1.translate(-cameraOffsetX, 0);
+
+        // 绘制地基
+        DiJi.forEach(diji => diji.draw());
+
+        // 更新游戏对象
+        platform.forEach(p => p.draw());
+        platform1.forEach(p => p.draw());
+        enemy.forEach(e => e.update());
+        luckRect.forEach(l => l.draw());
+        pipe.forEach(p => p.draw());
+        fenshu = Math.ceil(fenshu);
+        count.innerHTML = "分数: " + fenshu;
+
+        player.update();
+        flag.draw();
+        castle.draw();
+        handleMovement();
+        checkPlatformCollision();
+        c.restore();
+        if(flag.height==0&&player.score>=250){
+            alert("恭喜你，通关了！");
+            init();
+            h = 10;
+            fenshu = 0;
+            player.height = 20;
+        }
+    }
+
+    // 启动游戏
+    init();
+    animate();
+</script>
+</body>
+</html>
